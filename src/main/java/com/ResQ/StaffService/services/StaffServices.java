@@ -1,5 +1,7 @@
 package com.ResQ.StaffService.services;
 
+import com.ResQ.StaffService.OutsourcedServices.ResourceDto;
+import com.ResQ.StaffService.OutsourcedServices.ResourceInterface;
 import com.ResQ.StaffService.dtos.StaffDto;
 import com.ResQ.StaffService.entities.Staff;
 import com.ResQ.StaffService.repo.StaffRepo;
@@ -9,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -24,13 +23,46 @@ public class StaffServices {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private ResourceInterface resourceInterface;
+
     //create a staff member
     public String createStaffMember(StaffDto staffData){
         if(staffRepo.existsById(staffData.getStaff_id())){
             return VarList.RSP_DUPLICATE;
         }else{
-            staffRepo.save(modelMapper.map(staffData, Staff.class));
-            return VarList.RSP_SUCCESS;
+            //updating the resource table
+            String occupation = staffData.getOccupation();
+            Object existingResource = resourceInterface.getResourceByName(occupation).getData();
+
+            if(existingResource == null){
+                //if that occupation category does not exist in the resource table create that resource category (HR)
+                ResourceDto newResource = new ResourceDto();
+                newResource.setResource_id((int)(Math.random() * 101));  //set a new id
+                newResource.setAvailableUnits(1);
+                newResource.setFullCount(1);
+                newResource.setCategory(occupation);
+                resourceInterface.saveResource(newResource);
+
+                //saving the staff member in the staff database
+                staffRepo.save(modelMapper.map(staffData, Staff.class));
+                return VarList.RSP_SUCCESS;
+
+            }else{
+                //if that resource is existing just update it
+                LinkedHashMap<String, Object> mappedData = (LinkedHashMap<String, Object>) existingResource;
+                if(mappedData.containsKey("fullCount")){
+                    int count = (Integer) mappedData.get("fullCount");
+                    mappedData.put("fullCount", count + 1);  //increase the count when adding a HR
+                    resourceInterface.updateResource((Integer) mappedData.get("resource_id"), mappedData);
+
+                    //saving the staff member in the staff database
+                    staffRepo.save(modelMapper.map(staffData, Staff.class));
+                    return VarList.RSP_SUCCESS;
+                }else{
+                    return VarList.RSP_ERROR;
+                }
+            }
         }
     }
 

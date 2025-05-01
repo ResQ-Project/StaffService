@@ -29,7 +29,7 @@ public class StaffServices {
     //create a staff member
     public String createStaffMember(StaffDto staffData){
         if(staffRepo.existsById(staffData.getStaff_id())){
-            return VarList.RSP_DUPLICATE;
+            return "Staff_Member_Exist_With_That_ID";
         }else{
             //updating the resource table
             String occupation = staffData.getOccupation();
@@ -46,7 +46,7 @@ public class StaffServices {
 
                 //saving the staff member in the staff database
                 staffRepo.save(modelMapper.map(staffData, Staff.class));
-                return VarList.RSP_SUCCESS;
+                return "SUCCESS";
 
             }else{
                 //if that resource is existing just update it
@@ -58,9 +58,9 @@ public class StaffServices {
 
                     //saving the staff member in the staff database
                     staffRepo.save(modelMapper.map(staffData, Staff.class));
-                    return VarList.RSP_SUCCESS;
+                    return "SUCCESS";
                 }else{
-                    return VarList.RSP_ERROR;
+                    return "Error";
                 }
             }
         }
@@ -71,47 +71,53 @@ public class StaffServices {
         if(staffRepo.existsById(staffId)){
             Staff existingStaffMember = staffRepo.findById(staffId).get();
 
-            updates.forEach((key, value) -> {
-                switch (key) {
-                    case "national_id" -> existingStaffMember.setNational_id((String) value);
-                    case "first_name" -> existingStaffMember.setFirst_name((String) value);
-                    case "last_name" -> existingStaffMember.setLast_name((String) value);
-                    case "age" -> existingStaffMember.setAge((Integer) value);
-                    case "occupation" -> existingStaffMember.setOccupation((String) value);
-                    case "speciality" -> existingStaffMember.setSpeciality((String) value);
-                    case "patientIds" -> {
-                        if (value instanceof List<?>) {
-                            //patientIDs coming with the update request
-                            List<Integer> newPatientIds = ((List<?>) value).stream()
-                                    .filter(obj -> obj instanceof Integer)  // Ensure only integers
-                                    .map(obj -> (Integer) obj)
-                                    .toList();
+            if(existingStaffMember == null){
+                return "Staff_Member_with_that_ID_is_not_exists";
+            }else{
+                updates.forEach((key, value) -> {
+                    switch (key) {
+                        case "national_id" -> existingStaffMember.setNational_id((String) value);
+                        case "first_name" -> existingStaffMember.setFirst_name((String) value);
+                        case "last_name" -> existingStaffMember.setLast_name((String) value);
+                        case "age" -> existingStaffMember.setAge((Integer) value);
+                        case "occupation" -> existingStaffMember.setOccupation((String) value);
+                        case "speciality" -> existingStaffMember.setSpeciality((String) value);
+                        case "patientIds" -> {
+                            if (value instanceof List<?>) {
+                                //patientIDs coming with the update request
+                                List<Integer> newPatientIds = ((List<?>) value).stream()
+                                        .filter(obj -> obj instanceof Integer)  // Ensure only integers
+                                        .map(obj -> (Integer) obj)
+                                        .toList();
 
-                            // Retrieve existing patient IDs of that particular doctor
-                            List<Integer> existingPatientIds = existingStaffMember.getPatientIds();
+                                // Retrieve existing patient IDs of that particular doctor
+                                List<Integer> existingPatientIds = existingStaffMember.getPatientIds();
 
-                            // Append new IDs without duplicates to existing patients array
-                            for (Integer newId : newPatientIds) {
-                                if (!existingPatientIds.contains(newId)) {
-                                    existingPatientIds.add(newId);
+                                // Append new IDs without duplicates to existing patients array
+                                for (Integer newId : newPatientIds) {
+                                    if (!existingPatientIds.contains(newId)) {
+                                        existingPatientIds.add(newId);
+                                    }
                                 }
+
+                                // Update staff entity
+                                existingStaffMember.setPatientIds(existingPatientIds);
+                                existingStaffMember.setAssignedPatientCount(existingPatientIds.size()); // Update patient count
                             }
-
-                            // Update staff entity
-                            existingStaffMember.setPatientIds(existingPatientIds);
-                            existingStaffMember.setAssignedPatientCount(existingPatientIds.size()); // Update patient count
                         }
+
                     }
+                });
 
-                }
-            });
+                staffRepo.save(existingStaffMember);
+                return "SUCCESS";
+            }
 
-            staffRepo.save(existingStaffMember);
-            return VarList.RSP_SUCCESS;
+
 
         }else{
             //no staff member associated with that entity
-            return VarList.RSP_ERROR;
+            return "Error";
         }
     }
 

@@ -7,6 +7,7 @@ import com.ResQ.StaffService.entities.Staff;
 import com.ResQ.StaffService.repo.StaffRepo;
 import com.ResQ.StaffService.utils.VarList;
 import jakarta.transaction.Transactional;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
@@ -25,6 +26,13 @@ public class StaffServices {
 
     @Autowired
     private ResourceInterface resourceInterface;
+
+    //get all available doctors
+    public List<StaffDto> getAllDoctors(){
+        List<Staff> doctorsList = staffRepo.getAllDoctors();
+        System.out.println(doctorsList);
+        return modelMapper.map(doctorsList, new TypeToken<ArrayList<StaffDto>>(){}.getType());
+    }
 
     //create a staff member
     public String createStaffMember(StaffDto staffData){

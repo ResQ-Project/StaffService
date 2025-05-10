@@ -6,6 +6,7 @@ import com.ResQ.StaffService.services.StaffServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,6 +19,25 @@ public class StaffController {
     @Autowired
     private ResponseDto responseDto;
 
+    @GetMapping("/getAllDoctors")
+    public ResponseDto getAllDoctors(){
+        List<StaffDto> availableDoctorsList = staffServices.getAllDoctors();
+        if(availableDoctorsList.size() > 0){
+            responseDto.setStatus_code("200");
+            responseDto.setMessage("Available Doctors fetched successfully");
+            responseDto.setData(availableDoctorsList);
+        }else if(availableDoctorsList.size() == 0){
+            responseDto.setStatus_code("200");
+            responseDto.setMessage("Available doctors list is empty");
+            responseDto.setData(null);
+        }else{
+            responseDto.setStatus_code("400");
+            responseDto.setMessage("Error fetching data");
+            responseDto.setData(null);
+        }
+
+        return responseDto;
+    }
 
     @PostMapping("/createStaffMember")
     public ResponseDto createStaffMember(@RequestBody StaffDto staffDto){

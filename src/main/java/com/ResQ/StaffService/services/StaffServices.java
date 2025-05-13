@@ -27,10 +27,14 @@ public class StaffServices {
     @Autowired
     private ResourceInterface resourceInterface;
 
+    //get list of all available staff
+    public List<StaffDto> getAllStaff(){
+        List<Staff> staffList = staffRepo.findAll();
+        return modelMapper.map(staffList, new TypeToken<ArrayList<StaffDto>>(){}.getType());
+    }
     //get all available doctors
     public List<StaffDto> getAllDoctors(){
         List<Staff> doctorsList = staffRepo.getAllDoctors();
-        System.out.println(doctorsList);
         return modelMapper.map(doctorsList, new TypeToken<ArrayList<StaffDto>>(){}.getType());
     }
 

@@ -19,6 +19,26 @@ public class StaffController {
     @Autowired
     private ResponseDto responseDto;
 
+    @GetMapping("getAllStaff")
+    public ResponseDto getAllStaff(){
+        List<StaffDto> availableStaff = staffServices.getAllStaff();
+        if(availableStaff.size() > 0){
+            responseDto.setStatus_code("200");
+            responseDto.setMessage("Available staff fetched successfully");
+            responseDto.setData(availableStaff);
+        }else if(availableStaff.size() == 0){
+            responseDto.setStatus_code("200");
+            responseDto.setMessage("Available staff list is empty");
+            responseDto.setData(null);
+        }else{
+            responseDto.setStatus_code("400");
+            responseDto.setMessage("Error fetching data");
+            responseDto.setData(null);
+        }
+
+        return responseDto;
+    }
+
     @GetMapping("/getAllDoctors")
     public ResponseDto getAllDoctors(){
         List<StaffDto> availableDoctorsList = staffServices.getAllDoctors();
